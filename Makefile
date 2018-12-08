@@ -9,6 +9,13 @@ REPO_NAME ?= microtrader
 TEST_REPO_NAME ?= microtrader-dev
 TEST_DIR ?= build/test-results/junit/
 
+# AWS ECR settings
+DOCKER_REGISTRY ?= 527424704694.dkr.ecr.eu-west-3.amazonaws.com
+#AWS_ACCOUNT_ID ?= 527424704694
+#DOCKER_LOGIN_EXPRESSION := eval $$(aws ecr get-login --registry-ids $(AWS_ACCOUNT_ID))
+DOCKER_LOGIN_EXPRESSION := eval $$(aws ecr get-login --no-include-email)
+export ORG_NAME ?= ps-dockerproductionaws
+
 # Release settings
 export HTTP_PORT ?= 8000
 export AUDIT_HTTP_ROOT ?= /audit/
@@ -114,7 +121,8 @@ tag%default:
 # Login to Docker registry
 login:
 	${INFO} "Logging in to Docker registry $$DOCKER_REGISTRY..."
-	@ $(DOCKER_LOGIN_EXPRESSION)
+	@ echo "#### login, AWS_PROFILE=$(AWS_PROFILE), RELEASE_ARGS=$(RELEASE_ARGS)"
+	$(DOCKER_LOGIN_EXPRESSION)
 	${INFO} "Logged in to Docker registry $$DOCKER_REGISTRY"
 
 # Logout of Docker registry
@@ -126,10 +134,10 @@ logout:
 # Publishes image(s) tagged using make tag commands
 publish:
 	${INFO} "Publishing release images to $(DOCKER_REGISTRY)/$(ORG_NAME)..."
-	@ $(call publish_image,$(RELEASE_ARGS),microtrader-quote,$(DOCKER_REGISTRY)/$(ORG_NAME)/microtrader-quote)
-	@ $(call publish_image,$(RELEASE_ARGS),microtrader-audit,$(DOCKER_REGISTRY)/$(ORG_NAME)/microtrader-audit)
-	@ $(call publish_image,$(RELEASE_ARGS),microtrader-portfolio,$(DOCKER_REGISTRY)/$(ORG_NAME)/microtrader-portfolio)
-	@ $(call publish_image,$(RELEASE_ARGS),microtrader-dashboard,$(DOCKER_REGISTRY)/$(ORG_NAME)/microtrader-dashboard)
+	$(call publish_image,$(RELEASE_ARGS),microtrader-quote,$(DOCKER_REGISTRY)/$(ORG_NAME)/microtrader-quote)
+	$(call publish_image,$(RELEASE_ARGS),microtrader-audit,$(DOCKER_REGISTRY)/$(ORG_NAME)/microtrader-audit)
+	$(call publish_image,$(RELEASE_ARGS),microtrader-portfolio,$(DOCKER_REGISTRY)/$(ORG_NAME)/microtrader-portfolio)
+	$(call publish_image,$(RELEASE_ARGS),microtrader-dashboard,$(DOCKER_REGISTRY)/$(ORG_NAME)/microtrader-dashboard)
 	${INFO} "Publish complete"
 
 # Executes docker-compose commands in release environment
